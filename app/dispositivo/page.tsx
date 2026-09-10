@@ -35,155 +35,109 @@ export default function Dispositivo() {
   const [status, setStatus] = useState("desconectado")
   const [log, setLog] = useState<any[]>([])
   const [suportaBLE, setSuportaBLE] = useState(true)
+  const conexaoRef = useRef<any>(null)
   const deviceRef = useRef<any>(null)
   const cmdCharRef = useRef<any>(null)
 
-  useEffect(() => {
-    if (!(navigator as any).bluetooth) setSuportaBLE(false)
-    const unsub = onAuthStateChanged(auth, (user) => {
-      if (!user) { router.push("/"); return }
-      setUsuario(user)
-    })
-    return () => unsub()
-  }, [])
+useEffect(() => {
+  const unsub = onAuthStateChanged(auth, (user) => {
+    if (!user) { router.push("/"); return }
+    setUsuario(user)
+  })
+  return () => unsub()
+}, [])
 
   function adicionarLog(msg: string, tipo: string = "info") {
     const hora = new Date().toLocaleTimeString("pt-BR")
     setLog(prev => [{ msg, tipo, hora }, ...prev].slice(0, 20))
   }
 
-  async function conectar() {
-    if (!(navigator as any).bluetooth) {
-      adicionarLog("Bluetooth não suportado. Use Chrome ou Edge.", "erro")
-      return
-    }
-    try {
-      setStatus("buscando")
-      adicionarLog("Buscando SOS_DEVICE...")
+async function conectar() {
+  try {
+    setStatus("buscando")
 
-      const device = await (navigator as any).bluetooth.requestDevice({
-        filters: [{ name: "SOS_DEVICE" }],
-        optionalServices: [SERVICE_UUID]
-      })
+    const { conectarDispositivo } = await import("../utils/bluetooth")
 
-      adicionarLog("Dispositivo encontrado: " + device.name)
-      deviceRef.current = device
+    const conexao = await conectarDispositivo(
+      // onLog
+      (msg: string, tipo: string = "info") => adicionarLog(msg, tipo),
+      // onSOS
+      async () => {
+        try {
+          const { addDoc, collection, getDoc, doc } = await import("firebase/firestore")
 
-      device.addEventListener("gattserverdisconnected", async () => {
-        setStatus("desconectado")
-        adicionarLog("Dispositivo desconectado.", "aviso")
-        if (usuario) {
-          const { setDoc, doc } = await import("firebase/firestore")
-          await setDoc(doc(db, "usuarios", usuario.uid), {
-            echo: { conectado: false }
-          }, { merge: true })
-        }
-      })
-
-      const server = await device.gatt.connect()
-      adicionarLog("Conectado ao servidor GATT!")
-
-      const service = await server.getPrimaryService(SERVICE_UUID)
-      adicionarLog("Serviço encontrado!")
-
-      const sosChar = await service.getCharacteristic(CHAR_SOS_UUID)
-      adicionarLog("Característica encontrada, iniciando notificações...", "info")
-
-      try {
-        await sosChar.startNotifications()
-        adicionarLog("Notificações ativas — aguardando SOS...", "sucesso")
-      } catch (err: any) {
-        adicionarLog("Erro ao iniciar notificações: " + err.message, "erro")
-      }
-
-      sosChar.addEventListener("characteristicvaluechanged", async (event: any) => {
-        const decoder = new TextDecoder()
-        const value = decoder.decode(event.target.value)
-
-        adicionarLog("Valor recebido: " + value, "info")
-
-        if (value === "SOS_ATIVADO" || value.includes("SOS") || value.length > 3) {
-          adicionarLog("BOTÃO SOS PRESSIONADO!", "erro")
-
+          // Pega a última localização salva
+          let latitude: number | null = null
+          let longitude: number | null = null
           try {
-            const { addDoc, collection, getDoc, doc } = await import("firebase/firestore")
-
-            // Pega a última localização salva no Firebase (rápido!)
-            let latitude: number | null = null
-            let longitude: number | null = null
-            try {
-              const locSnap = await getDoc(doc(db, "localizacoes", usuario?.uid || ""))
-              if (locSnap.exists()) {
-                const dados = locSnap.data() as any
-                latitude = dados.latitude
-                longitude = dados.longitude
-                adicionarLog("Usando última localização: " + latitude?.toFixed(4) + ", " + longitude?.toFixed(4), "sucesso")
-              }
-            } catch { }
-
-            // Monta o alerta
-            const alerta: any = {
-              usuario_id: usuario?.uid || "anonimo",
-              origem: "dispositivo_echo",
-              ativo: true,
-              mensagem: "Botão SOS do Artemis Echo foi acionado!",
-              criado_em: new Date().toISOString()
+            const locSnap = await getDoc(doc(db, "localizacoes", usuario?.uid || ""))
+            if (locSnap.exists()) {
+              const dados = locSnap.data() as any
+              latitude = dados.latitude
+              longitude = dados.longitude
             }
-            if (latitude !== null && longitude !== null) {
-              alerta.latitude = latitude
-              alerta.longitude = longitude
-            }
+          } catch {}
 
-            await addDoc(collection(db, "alertas_sos"), alerta)
-            adicionarLog("✓ Alerta salvo no Firebase!", "sucesso")
-          } catch (err: any) {
-            adicionarLog("Erro Firebase: " + err.message, "erro")
+          const alerta: any = {
+            usuario_id: usuario?.uid || "anonimo",
+            origem: "dispositivo_echo",
+            ativo: true,
+            mensagem: "Botão SOS do Artemis Echo foi acionado!",
+            criado_em: new Date().toISOString()
           }
+          if (latitude !== null && longitude !== null) {
+            alerta.latitude = latitude
+            alerta.longitude = longitude
+          }
+
+          await addDoc(collection(db, "alertas_sos"), alerta)
+          adicionarLog("✓ Alerta salvo no Firebase!", "sucesso")
+        } catch (err: any) {
+          adicionarLog("Erro Firebase: " + err.message, "erro")
         }
-      })
-
-      cmdCharRef.current = sosChar
-      setStatus("conectado")
-      adicionarLog("✓ Artemis Echo conectado com sucesso!", "sucesso")
-
-      // Salva status do Echo no Firebase
-      if (usuario) {
-        const { setDoc, doc } = await import("firebase/firestore")
-        await setDoc(doc(db, "usuarios", usuario.uid), {
-          echo: {
-            conectado: true,
-            nome: device.name || "Artemis Echo",
-            ultima_conexao: new Date().toISOString()
-          }
-        }, { merge: true })
       }
+    )
 
-    } catch (err: any) {
-      setStatus("desconectado")
-      if (err.name === "NotFoundError") {
-        adicionarLog("Nenhum dispositivo selecionado.", "aviso")
-      } else {
-        adicionarLog("Erro: " + err.message, "erro")
-      }
-    }
-  }
+    conexaoRef.current = conexao
+    setStatus("conectado")
+    adicionarLog("✓ Artemis Echo conectado com sucesso!", "sucesso")
 
-  async function desconectar() {
-    if (deviceRef.current?.gatt?.connected) {
-      deviceRef.current.gatt.disconnect()
-    }
-    setStatus("desconectado")
-    cmdCharRef.current = null
-    adicionarLog("Desconectado manualmente.")
-
-    // Atualiza status no Firebase
+    // Salva status do Echo no Firebase
     if (usuario) {
       const { setDoc, doc } = await import("firebase/firestore")
       await setDoc(doc(db, "usuarios", usuario.uid), {
-        echo: { conectado: false }
+        echo: { conectado: true, nome: conexao.nome, ultima_conexao: new Date().toISOString() }
       }, { merge: true })
     }
+
+  } catch (err: any) {
+    setStatus("desconectado")
+    if (err.name === "NotFoundError" || err.message?.includes("cancel")) {
+      adicionarLog("Nenhum dispositivo selecionado.", "aviso")
+    } else {
+      adicionarLog("Erro: " + err.message, "erro")
+    }
   }
+}
+
+async function desconectar() {
+  try {
+    if (conexaoRef.current?.desconectar) {
+      await conexaoRef.current.desconectar()
+    }
+  } catch {}
+
+  conexaoRef.current = null
+  setStatus("desconectado")
+  adicionarLog("Desconectado manualmente.")
+
+  if (usuario) {
+    const { setDoc, doc } = await import("firebase/firestore")
+    await setDoc(doc(db, "usuarios", usuario.uid), {
+      echo: { conectado: false }
+    }, { merge: true })
+  }
+}
 
   async function enviarComando(cmd: string) {
     if (!cmdCharRef.current) {
