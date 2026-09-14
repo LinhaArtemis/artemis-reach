@@ -246,35 +246,6 @@ async function desconectar() {
           </div>
         </div>
 
-        {/* Comandos */}
-        {status === "conectado" && (
-          <div style={{ marginBottom: "16px" }}>
-            <p style={{ fontSize: "13px", fontWeight: "700", color: cores.roxoEscuro, marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              Comandos
-            </p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-              {[
-                { cmd: "SIRENE_ON", icon: Volume2, label: "Ativar sirene", cor: cores.roxo },
-                { cmd: "SIRENE_OFF", icon: Volume2, label: "Desativar sirene", cor: cores.lavanda },
-                { cmd: "SOS_ATIVADO", icon: AlertCircle, label: "Testar SOS", cor: "#ef4444" },
-                { cmd: "STATUS", icon: Shield, label: "Verificar status", cor: "#16a34a" },
-              ].map((item) => (
-                <button key={item.cmd} onClick={() => enviarComando(item.cmd)} style={{
-                  backgroundColor: cores.branco, borderRadius: "14px",
-                  padding: "14px", border: "1px solid rgba(90,73,151,0.15)",
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: "8px",
-                  cursor: "pointer", boxShadow: "0 1px 4px rgba(90,73,151,0.06)"
-                }}>
-                  <item.icon size={22} color={item.cor} />
-                  <span style={{ fontSize: "12px", fontWeight: "600", color: cores.roxoEscuro }}>
-                    {item.label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Log */}
         {log.length > 0 && (
           <div>
