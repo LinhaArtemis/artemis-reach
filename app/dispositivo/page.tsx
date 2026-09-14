@@ -139,20 +139,6 @@ async function desconectar() {
   }
 }
 
-  async function enviarComando(cmd: string) {
-    if (!cmdCharRef.current) {
-      adicionarLog("Dispositivo não conectado.", "erro")
-      return
-    }
-    try {
-      const encoder = new TextEncoder()
-      await cmdCharRef.current.writeValue(encoder.encode(cmd))
-      adicionarLog("Comando enviado: " + cmd, "sucesso")
-    } catch (err: any) {
-      adicionarLog("Erro ao enviar comando: " + err.message, "erro")
-    }
-  }
-
   const statusInfo: any = {
     desconectado: { cor: "#aaa", texto: "Desconectado", icon: BluetoothOff },
     buscando: { cor: cores.amarelo, texto: "Buscando dispositivo...", icon: BluetoothSearching },
