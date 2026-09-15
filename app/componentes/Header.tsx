@@ -43,16 +43,7 @@ export default function Header() {
           display: "flex", alignItems: "center", gap: "10px",
           textDecoration: "none"
         }}>
-          <div style={{
-            width: "32px", height: "32px", borderRadius: "50%",
-            backgroundColor: cores.roxo, display: "flex",
-            alignItems: "center", justifyContent: "center"
-          }}>
-            <MapPin size={16} color={cores.branco} />
-          </div>
-          <span style={{ fontWeight: "bold", fontSize: "17px", color: cores.roxoEscuro }}>
-            Artemis
-          </span>
+          <img src="/logoArtemis.png" alt="Artemis" style={{ height: "40px", objectFit: "contain", borderRadius: "8px" }} />
         </Link>
 
         <button

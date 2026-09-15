@@ -154,16 +154,8 @@ export default function Home() {
       padding: "32px 24px", fontFamily: "sans-serif"
     }}>
       {/* Logo */}
-      <div style={{ width: "72px", height: "72px", borderRadius: "50%", backgroundColor: cores.roxo, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <circle cx="18" cy="18" r="14" fill="white" opacity="0.9" />
-          <circle cx="23" cy="13" r="11" fill={cores.roxo} />
-          <circle cx="26" cy="8" r="2" fill="white" opacity="0.9" />
-          <circle cx="30" cy="14" r="1.5" fill="white" opacity="0.7" />
-        </svg>
-      </div>
+      <img src="/logo-reach.png" alt="Artemis Reach" style={{ width: "140px", objectFit: "contain", marginBottom: "16px", borderRadius: "16px" }} />
 
-      <h1 style={{ fontSize: "28px", fontWeight: "bold", color: cores.roxoEscuro, margin: 0 }}>Artemis</h1>
       <p style={{ color: cores.roxo, marginBottom: "40px", fontSize: "15px" }}>Sua segurança pessoal em tempo real</p>
 
       <div style={{ display: "flex", gap: "16px", width: "100%", maxWidth: "700px", flexWrap: "wrap" }}>
@@ -248,16 +240,8 @@ export default function Home() {
       alignItems: "center", justifyContent: "center",
       padding: "32px 24px", fontFamily: "sans-serif"
     }}>
-      <div style={{ width: "72px", height: "72px", borderRadius: "50%", backgroundColor: cores.roxo, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <circle cx="18" cy="18" r="14" fill="white" opacity="0.9" />
-          <circle cx="23" cy="13" r="11" fill={cores.roxo} />
-          <circle cx="26" cy="8" r="2" fill="white" opacity="0.9" />
-          <circle cx="30" cy="14" r="1.5" fill="white" opacity="0.7" />
-        </svg>
-      </div>
-
-      <h1 style={{ fontSize: "28px", fontWeight: "bold", color: cores.roxoEscuro, margin: 0 }}>Artemis</h1>
+      {/* Logo */}
+      <img src="/logo-reach.png" alt="Artemis Reach" style={{ width: "140px", objectFit: "contain", marginBottom: "16px", borderRadius: "16px" }} />
       <p style={{ color: cores.roxo, marginBottom: "32px", fontSize: "15px" }}>
         {tela === "login" ? "Bem-vinda de volta" : "Crie sua conta"}
       </p>
