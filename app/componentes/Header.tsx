@@ -44,6 +44,8 @@ export default function Header() {
           textDecoration: "none"
         }}>
           <img src="/logoArtemis.png" alt="Artemis" style={{ height: "40px", objectFit: "contain", borderRadius: "8px" }} />
+          <h1 style={{ fontSize: "28px", fontWeight: "bold", color: cores.roxoEscuro, margin: 0 }}>Artemis</h1>
+
         </Link>
 
         <button
