@@ -93,20 +93,18 @@ export default function Header() {
         display: "flex", flexDirection: "column"
       }}>
         {/* Topo do menu */}
+        {/* Topo do menu */}
         <div style={{
           padding: "20px 24px",
           display: "flex", justifyContent: "space-between", alignItems: "center",
           borderBottom: `1px solid ${cores.fundo}`
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{
-              width: "28px", height: "28px", borderRadius: "50%",
-              backgroundColor: cores.roxo, display: "flex",
-              alignItems: "center", justifyContent: "center"
-            }}>
-              <MapPin size={14} color={cores.branco} />
-            </div>
-            <span style={{ fontWeight: "bold", fontSize: "15px", color: cores.roxoEscuro }}>
+          <img
+            src={isDark ? "/logo-artemis-dark.png" : "/logo-artemis.png"}
+            alt="Artemis"
+            style={{ height: "44px", objectFit: "contain" }}
+          />
+          <span style={{ fontWeight: "bold", fontSize: "15px", color: cores.roxoEscuro }}>
               Artemis
             </span>
           </div>
