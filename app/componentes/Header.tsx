@@ -37,7 +37,7 @@ export default function Header() {
         backgroundColor: cores.branco, padding: "14px 24px",
         display: "flex", justifyContent: "space-between", alignItems: "center",
         boxShadow: "0 1px 4px rgba(90,73,151,0.08)",
-        position: "sticky", top: 0, zIndex: 100
+        position: "sticky", top: 0, zIndex: 5000
       }}>
         <Link href="/inicio" style={{
           display: "flex", alignItems: "center", gap: "10px",
@@ -74,7 +74,7 @@ export default function Header() {
           style={{
             position: "fixed", inset: 0,
             backgroundColor: "rgba(0,0,0,0.3)",
-            zIndex: 200
+            zIndex: 5000
           }}
         />
       )}
@@ -86,7 +86,7 @@ export default function Header() {
         position: "fixed", top: 0, right: 0, bottom: 0,
         width: "280px",
         backgroundColor: cores.branco,
-        zIndex: 300, padding: "0",
+        zIndex: 5000, padding: "0",
         transform: menuAberto ? "translateX(0)" : "translateX(100%)",
         transition: "transform 0.3s ease",
         boxShadow: "-4px 0 24px rgba(90,73,151,0.15)",
