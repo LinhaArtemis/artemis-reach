@@ -166,7 +166,6 @@ export default function Header() {
             Sair da conta
           </button>
         </div>
-      </div>
     </>
   )
 }

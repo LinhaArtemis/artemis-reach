@@ -165,15 +165,15 @@ export default function Home() {
           {
             modo: "echo",
             titulo: "Artemis Echo",
+            logo: isDark ? "/logo-echo-dark.png" : "/logo-echo.png",
             desc: "Conecte-se com seu dispositivo de segurança pessoal para proteção completa e monitoramento avançado",
-            icon: Bluetooth,
             destaque: true
           },
           {
             modo: "reach",
             titulo: "Artemis Reach",
+            logo: isDark ? "/logo-reach-dark.png" : "/logo-reach.png",
             desc: "Use apenas o aplicativo para compartilhar sua localização em tempo real com seu círculo de confiança",
-            icon: Smartphone,
             destaque: false
           }
         ].map(item => (
@@ -196,20 +196,17 @@ export default function Home() {
               e.currentTarget.style.boxShadow = "0 4px 20px rgba(90,73,151,0.1)"
             }}
           >
-            {/* Ícone */}
-            <div style={{
-              width: "64px", height: "64px", borderRadius: "16px",
-              backgroundColor: item.destaque ? cores.roxo : cores.fundo,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 20px"
-            }}>
-              <item.icon size={28} color={item.destaque ? cores.branco : cores.roxo} />
-            </div>
+            {/* Logo */}
+            <img
+              src={item.logo}
+              alt={item.titulo}
+              style={{ width: "90px", height: "90px", objectFit: "contain", margin: "0 auto 16px", display: "block" }}
+            />
 
             <h3 style={{ color: cores.roxoEscuro, margin: "0 0 12px", fontSize: "17px", fontWeight: "700" }}>
               {item.titulo}
             </h3>
-            <p style={{ color: "#888", fontSize: "13px", lineHeight: "1.6", margin: 0 }}>
+            <p style={{ color: cores.roxo, fontSize: "13px", lineHeight: "1.6", margin: 0 }}>
               {item.desc}
             </p>
 
