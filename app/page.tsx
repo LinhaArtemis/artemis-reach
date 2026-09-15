@@ -6,6 +6,7 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthState
 import { doc, setDoc } from "firebase/firestore"
 import { useRouter } from "next/navigation"
 import { Shield, Smartphone, Bluetooth } from "lucide-react"
+import { useTema } from "./contexts/ThemeContext"
 
 const cores = {
   fundo: "#EEEAF8",
@@ -82,6 +83,7 @@ function Splash({ onFim }: any) {
 }
 
 export default function Home() {
+  const { isDark } = useTema()
   const [splash, setSplash] = useState(true)
   const [tela, setTela] = useState("login")
   const [nome, setNome] = useState("")
@@ -93,7 +95,7 @@ export default function Home() {
   const [carregando, setCarregando] = useState(false)
   const router = useRouter()
 
-    // Verifica se já está logado
+  // Verifica se já está logado
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -241,7 +243,11 @@ export default function Home() {
       padding: "32px 24px", fontFamily: "sans-serif"
     }}>
       {/* Logo */}
-      <img src="/logo-reach.png" alt="Artemis Reach" style={{ width: "140px", objectFit: "contain", marginBottom: "16px", borderRadius: "16px" }} />
+      <img
+        src={isDark ? "/logo-reach-dark.png" : "/logo-reach.png"}
+        alt="Artemis Reach"
+        style={{ width: "140px", objectFit: "contain", marginBottom: "16px" }}
+      />
       <p style={{ color: cores.roxo, marginBottom: "32px", fontSize: "15px" }}>
         {tela === "login" ? "Bem-vinda de volta" : "Crie sua conta"}
       </p>

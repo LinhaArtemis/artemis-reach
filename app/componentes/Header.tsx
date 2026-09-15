@@ -43,7 +43,11 @@ export default function Header() {
           display: "flex", alignItems: "center", gap: "10px",
           textDecoration: "none"
         }}>
-          <img src="/logoArtemis.png" alt="Artemis" style={{ height: "40px", objectFit: "contain", borderRadius: "8px" }} />
+          <img
+            src={isDark ? "/logo-artemis-dark.png" : "/logo-artemis.png"}
+            alt="Artemis"
+            style={{ height: "40px", objectFit: "contain" }}
+          />
           <h1 style={{ fontSize: "28px", fontWeight: "bold", color: cores.roxoEscuro, margin: 0 }}>Artemis</h1>
 
         </Link>

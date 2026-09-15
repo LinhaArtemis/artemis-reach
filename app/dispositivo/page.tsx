@@ -39,105 +39,105 @@ export default function Dispositivo() {
   const deviceRef = useRef<any>(null)
   const cmdCharRef = useRef<any>(null)
 
-useEffect(() => {
-  const unsub = onAuthStateChanged(auth, (user) => {
-    if (!user) { router.push("/"); return }
-    setUsuario(user)
-  })
-  return () => unsub()
-}, [])
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (!user) { router.push("/"); return }
+      setUsuario(user)
+    })
+    return () => unsub()
+  }, [])
 
   function adicionarLog(msg: string, tipo: string = "info") {
     const hora = new Date().toLocaleTimeString("pt-BR")
     setLog(prev => [{ msg, tipo, hora }, ...prev].slice(0, 20))
   }
 
-async function conectar() {
-  try {
-    setStatus("buscando")
+  async function conectar() {
+    try {
+      setStatus("buscando")
 
-    const { conectarDispositivo } = await import("../utils/bluetooth")
+      const { conectarDispositivo } = await import("../utils/bluetooth")
 
-    const conexao = await conectarDispositivo(
-      // onLog
-      (msg: string, tipo: string = "info") => adicionarLog(msg, tipo),
-      // onSOS
-      async () => {
-        try {
-          const { addDoc, collection, getDoc, doc } = await import("firebase/firestore")
-
-          // Pega a última localização salva
-          let latitude: number | null = null
-          let longitude: number | null = null
+      const conexao = await conectarDispositivo(
+        // onLog
+        (msg: string, tipo: string = "info") => adicionarLog(msg, tipo),
+        // onSOS
+        async () => {
           try {
-            const locSnap = await getDoc(doc(db, "localizacoes", usuario?.uid || ""))
-            if (locSnap.exists()) {
-              const dados = locSnap.data() as any
-              latitude = dados.latitude
-              longitude = dados.longitude
+            const { addDoc, collection, getDoc, doc } = await import("firebase/firestore")
+
+            // Pega a última localização salva
+            let latitude: number | null = null
+            let longitude: number | null = null
+            try {
+              const locSnap = await getDoc(doc(db, "localizacoes", usuario?.uid || ""))
+              if (locSnap.exists()) {
+                const dados = locSnap.data() as any
+                latitude = dados.latitude
+                longitude = dados.longitude
+              }
+            } catch { }
+
+            const alerta: any = {
+              usuario_id: usuario?.uid || "anonimo",
+              origem: "dispositivo_echo",
+              ativo: true,
+              mensagem: "Botão SOS do Artemis Echo foi acionado!",
+              criado_em: new Date().toISOString()
             }
-          } catch {}
+            if (latitude !== null && longitude !== null) {
+              alerta.latitude = latitude
+              alerta.longitude = longitude
+            }
 
-          const alerta: any = {
-            usuario_id: usuario?.uid || "anonimo",
-            origem: "dispositivo_echo",
-            ativo: true,
-            mensagem: "Botão SOS do Artemis Echo foi acionado!",
-            criado_em: new Date().toISOString()
+            await addDoc(collection(db, "alertas_sos"), alerta)
+            adicionarLog("✓ Alerta salvo no Firebase!", "sucesso")
+          } catch (err: any) {
+            adicionarLog("Erro Firebase: " + err.message, "erro")
           }
-          if (latitude !== null && longitude !== null) {
-            alerta.latitude = latitude
-            alerta.longitude = longitude
-          }
-
-          await addDoc(collection(db, "alertas_sos"), alerta)
-          adicionarLog("✓ Alerta salvo no Firebase!", "sucesso")
-        } catch (err: any) {
-          adicionarLog("Erro Firebase: " + err.message, "erro")
         }
+      )
+
+      conexaoRef.current = conexao
+      setStatus("conectado")
+      adicionarLog("✓ Artemis Echo conectado com sucesso!", "sucesso")
+
+      // Salva status do Echo no Firebase
+      if (usuario) {
+        const { setDoc, doc } = await import("firebase/firestore")
+        await setDoc(doc(db, "usuarios", usuario.uid), {
+          echo: { conectado: true, nome: conexao.nome, ultima_conexao: new Date().toISOString() }
+        }, { merge: true })
       }
-    )
 
-    conexaoRef.current = conexao
-    setStatus("conectado")
-    adicionarLog("✓ Artemis Echo conectado com sucesso!", "sucesso")
+    } catch (err: any) {
+      setStatus("desconectado")
+      if (err.name === "NotFoundError" || err.message?.includes("cancel")) {
+        adicionarLog("Nenhum dispositivo selecionado.", "aviso")
+      } else {
+        adicionarLog("Erro: " + err.message, "erro")
+      }
+    }
+  }
 
-    // Salva status do Echo no Firebase
+  async function desconectar() {
+    try {
+      if (conexaoRef.current?.desconectar) {
+        await conexaoRef.current.desconectar()
+      }
+    } catch { }
+
+    conexaoRef.current = null
+    setStatus("desconectado")
+    adicionarLog("Desconectado manualmente.")
+
     if (usuario) {
       const { setDoc, doc } = await import("firebase/firestore")
       await setDoc(doc(db, "usuarios", usuario.uid), {
-        echo: { conectado: true, nome: conexao.nome, ultima_conexao: new Date().toISOString() }
+        echo: { conectado: false }
       }, { merge: true })
     }
-
-  } catch (err: any) {
-    setStatus("desconectado")
-    if (err.name === "NotFoundError" || err.message?.includes("cancel")) {
-      adicionarLog("Nenhum dispositivo selecionado.", "aviso")
-    } else {
-      adicionarLog("Erro: " + err.message, "erro")
-    }
   }
-}
-
-async function desconectar() {
-  try {
-    if (conexaoRef.current?.desconectar) {
-      await conexaoRef.current.desconectar()
-    }
-  } catch {}
-
-  conexaoRef.current = null
-  setStatus("desconectado")
-  adicionarLog("Desconectado manualmente.")
-
-  if (usuario) {
-    const { setDoc, doc } = await import("firebase/firestore")
-    await setDoc(doc(db, "usuarios", usuario.uid), {
-      echo: { conectado: false }
-    }, { merge: true })
-  }
-}
 
   const statusInfo: any = {
     desconectado: { cor: "#aaa", texto: "Desconectado", icon: BluetoothOff },
@@ -151,7 +151,11 @@ async function desconectar() {
     <div style={{ fontFamily: "sans-serif", backgroundColor: cores.fundo, minHeight: "100vh" }}>
       <Header />
       <div style={{ maxWidth: "600px", margin: "0 auto", padding: "24px 16px 100px" }}>
-
+        <img
+          src={isDark ? "/logo-reach-dark.png" : "/logo-reach.png"}
+          alt="Artemis Reach"
+          style={{ width: "140px", objectFit: "contain", marginBottom: "16px" }}
+        />
         <h2 style={{ fontSize: "22px", marginBottom: "4px", color: cores.roxoEscuro }}>
           Dispositivo Echo
         </h2>
