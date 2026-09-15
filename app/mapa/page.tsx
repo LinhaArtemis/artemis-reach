@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { auth, db } from "../firebase"
 import { onAuthStateChanged } from "firebase/auth"
 import { collection, onSnapshot, doc, setDoc, query, where, getDoc } from "firebase/firestore"
-import { MapPin, Navigation, AlertCircle, Users, MessageSquare, Home, Bell, Layers, Check, X, Route } from "lucide-react"
+import { MapPin, Navigation, AlertCircle, Users, MessageSquare, Home, Bell, Layers, Check, X } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Header from "../componentes/Header"
@@ -38,8 +38,6 @@ export default function Mapa() {
   const [modalSOS, setModalSOS] = useState(false)
   const [contadorSOS, setContadorSOS] = useState<number | null>(null)
   const contadorRef = useRef<any>(null)
-  const [mostrarRota, setMostrarRota] = useState(false)
-  const [pontosRota, setPontosRota] = useState<any[]>([])
   const ultimoSalvoRef = useRef<number>(0)
   const [contatos, setContatos] = useState<any[]>([])
   const [contatosSelecionados, setContatosSelecionados] = useState<Set<string>>(new Set())
@@ -151,30 +149,6 @@ export default function Mapa() {
     return () => unsub()
   }, [usuarioId])
 
-  async function carregarRotaHoje() {
-    if (!usuarioId) return
-    if (mostrarRota) {
-      setMostrarRota(false)
-      setPontosRota([])
-      return
-    }
-    const hoje = new Date().toISOString().split("T")[0]
-    const { collection: col, query: q2, where: w2, orderBy: ob, getDocs } = await import("firebase/firestore")
-    const consulta = q2(
-      col(db, "historico_rotas"),
-      w2("usuario_id", "==", usuarioId),
-      w2("data", "==", hoje),
-      ob("timestamp", "asc")
-    )
-    const snap = await getDocs(consulta)
-    const pontos = snap.docs.map(d => {
-      const data = d.data()
-      return { lat: data.latitude, lng: data.longitude }
-    })
-    setPontosRota(pontos)
-    setMostrarRota(true)
-  }
-
   function toggleGrupo(grupoId: string) {
     setGruposSelecionados((prev) => {
       const novo = new Set(prev)
@@ -252,25 +226,6 @@ export default function Mapa() {
     })
   }
 
-  async function limparRotasAntigas() {
-    if (!usuarioId) return
-    const hoje = new Date().toISOString().split("T")[0]
-    const { collection: col, query: q2, where: w2, getDocs, deleteDoc, doc: d2 } = await import("firebase/firestore")
-
-    try {
-      const consulta = q2(
-        col(db, "historico_rotas"),
-        w2("usuario_id", "==", usuarioId),
-        w2("data", "!=", hoje)
-      )
-      const snap = await getDocs(consulta)
-      await Promise.all(snap.docs.map(ponto => deleteDoc(d2(db, "historico_rotas", ponto.id))))
-    } catch { }
-  }
-  useEffect(() => {
-    if (usuarioId) limparRotasAntigas()
-  }, [usuarioId])
-
   return (
     <div style={{ fontFamily: "sans-serif", backgroundColor: cores.fundo }}>
       <Header />
@@ -293,7 +248,7 @@ export default function Mapa() {
       {/* Mapa Leaflet */}
       <div style={{ width: "100%", height: "calc(100vh - 170px)", position: "relative", zIndex: 0 }}>
         {minhaPos ? (
-          <MapaLeaflet minhaPos={minhaPos} localizacoes={localizacoes} centralizar={centralizar} pontosRota={mostrarRota ? pontosRota : []} />
+          <MapaLeaflet minhaPos={minhaPos} localizacoes={localizacoes} centralizar={centralizar} />
         ) : (
           <div style={{ width: "100%", height: "calc(100vh - 170px)", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: cores.fundo, flexDirection: "column", gap: "12px" }}>
             <div style={{ width: "40px", height: "40px", borderRadius: "50%", border: `3px solid ${cores.roxo}`, borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
@@ -411,18 +366,6 @@ export default function Mapa() {
           </div>
         </>
       )}
-
-      {/* Botão histórico de rota */}
-      <div style={{ position: "fixed", bottom: "144px", left: "24px", zIndex: 999 }}>
-        <button onClick={carregarRotaHoje} style={{
-          width: "44px", height: "44px", borderRadius: "50%",
-          backgroundColor: mostrarRota ? cores.roxo : cores.branco,
-          border: "none", display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", boxShadow: "0 2px 12px rgba(0,0,0,0.15)"
-        }}>
-          <Route size={20} color={mostrarRota ? "white" : cores.roxo} />
-        </button>
-      </div>
 
       {/* Modal grupos e contatos */}
       {modalGrupos && (
