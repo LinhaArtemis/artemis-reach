@@ -58,8 +58,9 @@ export default function Mapa() {
 
   useEffect(() => {
     if (!usuarioId) return
+    const idUsuario = usuarioId
     async function buscarNome() {
-      const perfil = await getDoc(doc(db, "usuarios", usuarioId))
+      const perfil = await getDoc(doc(db, "usuarios", idUsuario))
       if (perfil.exists()) setNomeUsuario(perfil.data()?.nome?.split(" ")[0] || "Usuária")
     }
     buscarNome()
