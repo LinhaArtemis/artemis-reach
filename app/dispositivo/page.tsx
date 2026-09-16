@@ -151,17 +151,16 @@ export default function Dispositivo() {
     <div style={{ fontFamily: "sans-serif", backgroundColor: cores.fundo, minHeight: "100vh" }}>
       <Header />
       <div style={{ maxWidth: "600px", margin: "0 auto", padding: "24px 16px 100px" }}>
-        <img
-          src={isDark ? "/logo-reach-dark.png" : "/logo-reach.png"}
-          alt="Artemis Reach"
-          style={{ width: "140px", objectFit: "contain", marginBottom: "16px" }}
-        />
-        <h2 style={{ fontSize: "22px", marginBottom: "4px", color: cores.roxoEscuro }}>
-          Dispositivo Echo
-        </h2>
-        <p style={{ color: cores.lavanda, marginBottom: "24px", fontSize: "14px" }}>
-          Conecte seu dispositivo Artemis Echo via Bluetooth
-        </p>
+        <div style={{ textAlign: "center", marginBottom: "24px" }}>
+          <img
+            src={isDark ? "/logo-echo-dark.png" : "/logo-echo.png"}
+            alt="Artemis Echo"
+            style={{ width: "140px", objectFit: "contain", marginBottom: "8px" }}
+          />
+          <p style={{ color: cores.lavanda, fontSize: "14px", margin: 0 }}>
+            Conecte seu dispositivo Artemis Echo via Bluetooth
+          </p>
+        </div>
 
         {!suportaBLE && (
           <div style={{
