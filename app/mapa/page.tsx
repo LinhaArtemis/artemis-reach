@@ -301,7 +301,7 @@ export default function Mapa() {
       </div>
 
       {/* Botão grupos */}
-      <div style={{ position: "fixed", bottom: "120px", left: "24px", zIndex: 999 }}>
+      <div style={{ position: "fixed", bottom: "150px", left: "24px", zIndex: 999 }}>
         <button onClick={() => setModalGrupos(true)} style={{
           width: "44px", height: "44px", borderRadius: "50%",
           backgroundColor: cores.branco, border: "none",
