@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { auth, db } from "../firebase"
 import { onAuthStateChanged } from "firebase/auth"
-import { collection, onSnapshot, doc, setDoc, query, where, getDoc } from "firebase/firestore"
+import { collection, onSnapshot, doc, query, where, getDoc } from "firebase/firestore"
 import { MapPin, Navigation, AlertCircle, Users, MessageSquare, Home, Bell, Layers, Check, X } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -11,6 +11,7 @@ import Header from "../componentes/Header"
 import dynamic from "next/dynamic"
 import { useTema } from "../contexts/ThemeContext"
 import { getCores } from "../cores"
+import { useSOS } from "../hooks/useSOS"
 
 const nav = [
   { icon: Home, label: "Início", href: "/inicio" },
@@ -52,6 +53,17 @@ export default function Mapa() {
       return salvo ? new Set(JSON.parse(salvo)) : new Set()
     } catch { return new Set() }
   })
+  const { sosAtivo, acionarSOS, cancelarSOS: cancelarSOSFirebase } = useSOS()
+  const [nomeUsuario, setNomeUsuario] = useState("Usuária")
+
+  useEffect(() => {
+    if (!usuarioId) return
+    async function buscarNome() {
+      const perfil = await getDoc(doc(db, "usuarios", usuarioId))
+      if (perfil.exists()) setNomeUsuario(perfil.data()?.nome?.split(" ")[0] || "Usuária")
+    }
+    buscarNome()
+  }, [usuarioId])
 
   useEffect(() => {
     try {
@@ -208,6 +220,8 @@ export default function Mapa() {
   }
 
   function ativarSOSRapido() {
+    // Se já tem SOS ativo, não faz nada (evita duplicar)
+    if (sosAtivo) return
     setModalSOS(true)
     let c = 3
     setContadorSOS(c)
@@ -221,7 +235,7 @@ export default function Mapa() {
     }, 1000)
   }
 
-  function cancelarSOS() {
+  function cancelarContagem() {
     clearInterval(contadorRef.current)
     setModalSOS(false)
     setContadorSOS(null)
@@ -231,29 +245,7 @@ export default function Mapa() {
     clearInterval(contadorRef.current)
     setModalSOS(false)
     setContadorSOS(null)
-
-    navigator.geolocation?.getCurrentPosition(async (pos) => {
-      const { latitude, longitude } = pos.coords
-      const { addDoc, collection: col } = await import("firebase/firestore")
-      await addDoc(col(db, "alertas_sos"), {
-        usuario_id: usuarioId,
-        origem: "app",
-        latitude,
-        longitude,
-        ativo: true,
-        mensagem: "SOS acionado pelo mapa!",
-        criado_em: new Date().toISOString()
-      })
-    }, async () => {
-      const { addDoc, collection: col } = await import("firebase/firestore")
-      await addDoc(col(db, "alertas_sos"), {
-        usuario_id: usuarioId,
-        origem: "app",
-        ativo: true,
-        mensagem: "SOS acionado pelo mapa!",
-        criado_em: new Date().toISOString()
-      })
-    })
+    await acionarSOS(nomeUsuario)
   }
 
   return (
@@ -326,13 +318,13 @@ export default function Mapa() {
       {/* Botão SOS */}
       <div style={{ position: "fixed", bottom: "100px", right: "24px", zIndex: 999 }}>
         <button
-          onClick={() => ativarSOSRapido()}
+          onClick={() => sosAtivo ? cancelarSOSFirebase() : ativarSOSRapido()}
           style={{
             width: "64px", height: "64px", borderRadius: "50%",
-            backgroundColor: "#ef4444", border: "4px solid white",
+            backgroundColor: sosAtivo ? "#16a34a" : "#ef4444", border: "4px solid white",
             display: "flex", alignItems: "center", justifyContent: "center",
             cursor: "pointer", boxShadow: "0 4px 20px rgba(239,68,68,0.3)",
-            animation: "pulse-sos 2s ease-in-out infinite"
+            animation: sosAtivo ? "none" : "pulse-sos 2s ease-in-out infinite"
           }}>
           <AlertCircle size={24} color={cores.branco} />
         </button>
@@ -341,7 +333,7 @@ export default function Mapa() {
       {/* Confirmação SOS */}
       {modalSOS && (
         <>
-          <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 999 }} />
+          <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 4000 }} />
           <div style={{
             position: "fixed", bottom: 0, left: 0, right: 0,
             backgroundColor: cores.branco, borderRadius: "24px 24px 0 0",
@@ -376,7 +368,7 @@ export default function Mapa() {
               )}
             </div>
             <div style={{ display: "flex", gap: "12px" }}>
-              <button onClick={cancelarSOS} style={{
+              <button onClick={cancelarContagem} style={{
                 flex: 1, padding: "14px", borderRadius: "14px",
                 border: `1.5px solid ${cores.roxoClaro}`,
                 backgroundColor: "transparent", color: cores.roxo,
