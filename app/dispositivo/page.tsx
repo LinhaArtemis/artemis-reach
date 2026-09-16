@@ -151,13 +151,13 @@ export default function Dispositivo() {
     <div style={{ fontFamily: "sans-serif", backgroundColor: cores.fundo, minHeight: "100vh" }}>
       <Header />
       <div style={{ maxWidth: "600px", margin: "0 auto", padding: "24px 16px 100px" }}>
-        <div style={{ textAlign: "center", marginBottom: "24px" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "24px" }}>
           <img
             src={isDark ? "/logo-echo-dark.png" : "/logo-echo.png"}
             alt="Artemis Echo"
             style={{ width: "140px", objectFit: "contain", marginBottom: "8px" }}
           />
-          <p style={{ color: cores.lavanda, fontSize: "14px", margin: 0 }}>
+          <p style={{ color: cores.lavanda, fontSize: "14px", margin: 0, textAlign: "center" }}>
             Conecte seu dispositivo Artemis Echo via Bluetooth
           </p>
         </div>
