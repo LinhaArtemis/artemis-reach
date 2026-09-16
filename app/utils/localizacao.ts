@@ -20,7 +20,7 @@ export async function iniciarRastreamento(
         backgroundTitle: "Artemis protegendo você",
         requestPermissions: true,
         stale: true,
-        distanceFilter: 0,
+        distanceFilter: 30,
       },
       (location: any, error: any) => {
         console.log("GPS BACKGROUND CALLBACK:", location, error)
