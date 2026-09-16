@@ -31,7 +31,6 @@ export default function Mapa() {
   const [status, setStatus] = useState("Obtendo localização...")
   const [usuarioId, setUsuarioId] = useState<string | null>(null)
   const [grupos, setGrupos] = useState<any[]>([])
-  const [gruposSelecionados, setGruposSelecionados] = useState<Set<string>>(new Set())
   const [modalGrupos, setModalGrupos] = useState(false)
   const pathname = usePathname()
   const [centralizar, setCentralizar] = useState(false)
@@ -40,8 +39,31 @@ export default function Mapa() {
   const contadorRef = useRef<any>(null)
   const ultimoSalvoRef = useRef<number>(0)
   const [contatos, setContatos] = useState<any[]>([])
-  const [contatosSelecionados, setContatosSelecionados] = useState<Set<string>>(new Set())
   const [abaModal, setAbaModal] = useState<"grupos" | "contatos">("grupos")
+  const [gruposSelecionados, setGruposSelecionados] = useState<Set<string>>(() => {
+    try {
+      const salvo = localStorage.getItem("mapa-grupos-selecionados")
+      return salvo ? new Set(JSON.parse(salvo)) : new Set()
+    } catch { return new Set() }
+  })
+  const [contatosSelecionados, setContatosSelecionados] = useState<Set<string>>(() => {
+    try {
+      const salvo = localStorage.getItem("mapa-contatos-selecionados")
+      return salvo ? new Set(JSON.parse(salvo)) : new Set()
+    } catch { return new Set() }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("mapa-grupos-selecionados", JSON.stringify([...gruposSelecionados]))
+    } catch { }
+  }, [gruposSelecionados])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("mapa-contatos-selecionados", JSON.stringify([...contatosSelecionados]))
+    } catch { }
+  }, [contatosSelecionados])
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -56,7 +78,12 @@ export default function Mapa() {
     const unsub = onSnapshot(q, (snap) => {
       const dados = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
       setGrupos(dados)
-      setGruposSelecionados(new Set(dados.map((g: any) => g.id)))
+      // Só marca todos se nunca houve seleção salva
+      setGruposSelecionados((prev) => {
+        const salvo = localStorage.getItem("mapa-grupos-selecionados")
+        if (salvo !== null) return prev  // já tem seleção salva, mantém
+        return new Set(dados.map((g: any) => g.id))  // primeira vez, marca todos
+      })
     })
     return () => unsub()
   }, [usuarioId])
@@ -143,8 +170,11 @@ export default function Mapa() {
         return { id: outroId, nome, circuloId: d.id }
       }))
       setContatos(lista)
-      // Por padrão, todos selecionados
-      setContatosSelecionados(new Set(lista.map(c => c.id)))
+      setContatosSelecionados((prev) => {
+        const salvo = localStorage.getItem("mapa-contatos-selecionados")
+        if (salvo !== null) return prev
+        return new Set(lista.map(c => c.id))
+      })
     })
     return () => unsub()
   }, [usuarioId])
@@ -271,7 +301,7 @@ export default function Mapa() {
       </div>
 
       {/* Botão grupos */}
-      <div style={{ position: "fixed", bottom: "208px", left: "24px", zIndex: 999 }}>
+      <div style={{ position: "fixed", bottom: "120px", left: "24px", zIndex: 999 }}>
         <button onClick={() => setModalGrupos(true)} style={{
           width: "44px", height: "44px", borderRadius: "50%",
           backgroundColor: cores.branco, border: "none",
