@@ -910,25 +910,27 @@ export default function Inicio() {
         >
 
           {/* Ligar 190 */}
-          <a
-            href="tel:190"
+          <button
+            onClick={async () => {
+              try {
+                const { AppLauncher } = await import("@capacitor/app-launcher")
+                await AppLauncher.openUrl({ url: "tel:190" })
+              } catch {
+                window.location.href = "tel:190"
+              }
+            }}
             style={{
               flex: 1,
               padding: "16px",
               borderRadius: "16px",
-              backgroundColor:
-                cores.branco,
-              textDecoration: "none",
+              backgroundColor: cores.branco,
+              border: "1px solid " + cores.borda,
+              cursor: "pointer",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               gap: "8px",
-              boxShadow:
-                "0 2px 8px " +
-                cores.sombra,
-              border:
-                "1px solid " +
-                cores.borda
+              boxShadow: "0 2px 8px " + cores.sombra
             }}
           >
             <div
@@ -936,17 +938,13 @@ export default function Inicio() {
                 width: "44px",
                 height: "44px",
                 borderRadius: "50%",
-                backgroundColor:
-                  "rgba(239,68,68,0.1)",
+                backgroundColor: "rgba(239,68,68,0.1)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center"
               }}
             >
-              <Phone
-                size={22}
-                color="#ef4444"
-              />
+              <Phone size={22} color="#ef4444" />
             </div>
 
             <span
@@ -958,7 +956,7 @@ export default function Inicio() {
             >
               Ligar 190
             </span>
-          </a>
+          </button>
 
           {/* Compartilhar localização */}
           <button
