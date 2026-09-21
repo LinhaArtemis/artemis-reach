@@ -1632,6 +1632,13 @@ function AbaParceiros() {
       imagem: "/xGMobile%20_%20H.png",
       descricao:
         "Centro de Competência EMBRAPII Inatel em Redes 5G e 6G, voltado à pesquisa, desenvolvimento e inovação em redes de comunicações móveis, com foco no avanço das tecnologias 5G e na evolução para as futuras redes 6G."
+    },
+    {
+      tipo: "Apoiador",
+      nome: "INATELINAS",
+      imagem: "/Inatelinas.png",
+      descricao:
+        "O INATELINAS é um grupo formado por ex-alunas do Inatel - Instituto Nacional de Telecomunicações. Nosso grupo é bem diverso, temos mulheres em diversas áreas tanto em empresas como fora delas! Formamos uma rede de apoio para as mulheres que estão formando, para aquelas em transição de carreira e as que buscam desenvolver competências. Através de mentorias gratuitas e eventos temáticos nos tornamos mais ativas na nossa comunidade buscando sempre a inclusão e a diversidade."
     }
   ]
 
