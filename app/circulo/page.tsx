@@ -50,6 +50,34 @@ export default function Circulo() {
   const [carregando, setCarregando] = useState(true)
   const [abaAtiva, setAbaAtiva] = useState("grupos")
   const [presencas, setPresencas] = useState<any>({})
+  const [contatos, setContatos] = useState<any[]>([])
+  const [contatosSelecionados, setContatosSelecionados] = useState<Set<string>>(new Set())
+  const [modalContatos, setModalContatos] = useState(false)
+  const [grupoParaConvite, setGrupoParaConvite] = useState<any>(null)
+
+
+  useEffect(() => {
+    if (!usuario) return
+    const q = query(
+      collection(db, "circulos"),
+      where("usuarios", "array-contains", usuario.uid),
+      where("status", "==", "confirmado")
+    )
+    const unsub = onSnapshot(q, async (snap) => {
+      const lista = await Promise.all(snap.docs.map(async (d) => {
+        const data = d.data() as any
+        const outroId = data.usuarios.find((id: string) => id !== usuario.uid)
+        let nome = "Contato"
+        try {
+          const perfil = await getDoc(doc(db, "usuarios", outroId))
+          if (perfil.exists()) nome = perfil.data()?.nome || "Contato"
+        } catch { }
+        return { id: outroId, nome }
+      }))
+      setContatos(lista)
+    })
+    return () => unsub()
+  }, [usuario])
 
   useEffect(() => {
     if (!usuario) return
@@ -166,6 +194,45 @@ export default function Circulo() {
     setNomeGrupo("")
     setCorSelecionada(CORES_GRUPOS[0])
     setModalNovoGrupo(false)
+  }
+
+  async function chamarContatos(grupo: any) {
+    if (contatosSelecionados.size === 0) {
+      alert("Selecione pelo menos um contato.")
+      return
+    }
+
+    for (const contatoId of contatosSelecionados) {
+      // Não convida quem já está no grupo
+      if ((grupo.membros || []).includes(contatoId)) continue
+
+      const token = Math.random().toString(36).substring(2) + Date.now().toString(36)
+      await addDoc(collection(db, "convites"), {
+        token,
+        criador_id: usuario.uid,
+        criador_nome: nomeUsuario,
+        grupo_id: grupo.id,
+        grupo_nome: grupo.nome,
+        tipo: "grupo",
+        convidado_id: contatoId,
+        status: "pendente",
+        expira_em: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        criado_em: new Date().toISOString()
+      })
+    }
+
+    alert("Convites enviados!")
+    setModalContatos(false)
+    setContatosSelecionados(new Set())
+  }
+
+  function toggleContatoSelecionado(id: string) {
+    setContatosSelecionados(prev => {
+      const novo = new Set(prev)
+      if (novo.has(id)) novo.delete(id)
+      else novo.add(id)
+      return novo
+    })
   }
 
   async function gerarLinkGrupo(grupo: any) {
@@ -494,26 +561,38 @@ export default function Circulo() {
       </div>
 
       {/* Botões fixos */}
-      <div style={{ position: "fixed", bottom: "80px", left: 0, right: 0, padding: "0 16px", display: "flex", gap: "10px" }}>
-        <button onClick={() => setModalNovoGrupo(true)} style={{
-          flex: 1, padding: "14px",
-          backgroundColor: cores.branco, color: cores.roxo,
-          border: `1.5px solid ${cores.roxo}`, borderRadius: "14px",
-          fontSize: "14px", fontWeight: "600", cursor: "pointer",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: "8px"
-        }}>
-          <Plus size={18} /> Novo grupo
-        </button>
-        <button onClick={gerarLinkIndividual} style={{
-          flex: 1, padding: "14px",
-          backgroundColor: cores.roxo, color: cores.branco,
+      <div style={{ position: "fixed", bottom: "80px", left: 0, right: 0, padding: "0 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+        <button onClick={() => setModalContatos(true)} style={{
+          width: "100%", padding: "14px",
+          backgroundColor: cores.amarelo, color: cores.roxoEscuro,
           border: "none", borderRadius: "14px",
-          fontSize: "14px", fontWeight: "600", cursor: "pointer",
+          fontSize: "14px", fontWeight: "700", cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-          boxShadow: "0 4px 16px rgba(90,73,151,0.3)"
+          boxShadow: "0 4px 16px rgba(253,234,114,0.4)"
         }}>
-          <LinkIcon size={18} /> Convidar
+          <Users size={18} /> Chamar contatos para um grupo
         </button>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button onClick={() => setModalNovoGrupo(true)} style={{
+            flex: 1, padding: "14px",
+            backgroundColor: cores.branco, color: cores.roxo,
+            border: `1.5px solid ${cores.roxo}`, borderRadius: "14px",
+            fontSize: "14px", fontWeight: "600", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "8px"
+          }}>
+            <Plus size={18} /> Novo grupo
+          </button>
+          <button onClick={gerarLinkIndividual} style={{
+            flex: 1, padding: "14px",
+            backgroundColor: cores.roxo, color: cores.branco,
+            border: "none", borderRadius: "14px",
+            fontSize: "14px", fontWeight: "600", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+            boxShadow: "0 4px 16px rgba(90,73,151,0.3)"
+          }}>
+            <LinkIcon size={18} /> Convidar
+          </button>
+        </div>
       </div>
 
       {/* Modal novo grupo */}

@@ -46,26 +46,39 @@ function AceitarConviteInner() {
   }, [token, usuario])
 
   async function aceitar() {
-    if (!convite || !usuario) return
+  if (!convite || !usuario) return
 
-    // Verifica se permite convites
-    const perfilSnap = await getDoc(doc(db, "usuarios", usuario.uid))
-    const permiteConvites = perfilSnap.data()?.privacidade?.convites !== false
-    if (!permiteConvites) {
-      alert("Você desativou convites para círculo nas configurações de privacidade.")
-      return
-    }
+  // Verifica se permite convites
+  const perfilSnap = await getDoc(doc(db, "usuarios", usuario.uid))
+  const permiteConvites = perfilSnap.data()?.privacidade?.convites !== false
+  if (!permiteConvites) {
+    alert("Você desativou convites para círculo nas configurações de privacidade.")
+    return
+  }
 
-    await addDoc(collection(db, "circulos"), {
-      usuarios: [convite.criador_id, usuario.uid],
-      status: "confirmado",
-      compartilha: { [convite.criador_id]: false, [usuario.uid]: false },
-      criado_em: new Date().toISOString()
+  // Se for convite de GRUPO, entra no grupo
+  if (convite.tipo === "grupo" && convite.grupo_id) {
+    const { arrayUnion } = await import("firebase/firestore")
+    await updateDoc(doc(db, "grupos", convite.grupo_id), {
+      membros: arrayUnion(usuario.uid)
     })
     await updateDoc(doc(db, "convites", convite.id), { status: "aceito" })
     setEstado("aceito")
     setTimeout(() => router.push("/circulo"), 2000)
+    return
   }
+
+  // Se for convite INDIVIDUAL, cria círculo
+  await addDoc(collection(db, "circulos"), {
+    usuarios: [convite.criador_id, usuario.uid],
+    status: "confirmado",
+    compartilha: { [convite.criador_id]: false, [usuario.uid]: false },
+    criado_em: new Date().toISOString()
+  })
+  await updateDoc(doc(db, "convites", convite.id), { status: "aceito" })
+  setEstado("aceito")
+  setTimeout(() => router.push("/circulo"), 2000)
+}
 
   async function recusar() {
     await updateDoc(doc(db, "convites", convite.id), { status: "recusado" })

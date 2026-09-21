@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { auth, db } from "./firebase"
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth"
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { useRouter } from "next/navigation"
 import { Shield, Smartphone, Bluetooth } from "lucide-react"
@@ -232,6 +232,27 @@ export default function Home() {
   )
 
   // ─── TELA DE LOGIN / CADASTRO ───
+
+  async function recuperarSenha() {
+    if (!email) {
+      setErro("Digite seu email primeiro para recuperar a senha.")
+      return
+    }
+    try {
+      await sendPasswordResetEmail(auth, email)
+      setErro("")
+      alert("Enviamos um link de recuperação para o seu email!")
+    } catch (e: any) {
+      if (e.code === "auth/user-not-found") {
+        setErro("Não encontramos uma conta com esse email.")
+      } else if (e.code === "auth/invalid-email") {
+        setErro("Email inválido.")
+      } else {
+        setErro("Erro ao enviar recuperação. Tente novamente.")
+      }
+    }
+  }
+
   return (
     <div style={{
       minHeight: "100vh", backgroundColor: cores.fundo,
@@ -262,8 +283,7 @@ export default function Home() {
             <label style={{ fontSize: "13px", color: "#666", display: "flex", alignItems: "center", gap: "6px" }}>
               <input type="checkbox" /> Lembrar-me
             </label>
-            <span style={{ fontSize: "13px", color: cores.roxo, cursor: "pointer", fontWeight: "600" }}>Esqueceu a senha?</span>
-          </div>
+            <span onClick={recuperarSenha} style={{ fontSize: "13px", color: cores.roxo, cursor: "pointer", fontWeight: "600" }}>Esqueceu a senha?</span>          </div>
         )}
 
         {erro && <p style={{ color: "#ef4444", fontSize: "13px", marginBottom: "16px", textAlign: "center" }}>{erro}</p>}
