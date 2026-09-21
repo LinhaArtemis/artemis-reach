@@ -1628,6 +1628,12 @@ function AbaParceiros() {
   const parceiros = [
     {
       tipo: "Apoiador",
+      nome: "Inatel",
+      imagem: "/inatel.png",
+      descricao: "Fundado em 1965, o Instituto Nacional de Telecomunicações - Inatel é um centro de excelência em ensino e pesquisa na área de Engenharia, e tem se consolidado cada vez mais, no Brasil e no exterior, como um celeiro de grandes talentos. Foi a primeira instituição de ensino do país a oferecer um curso superior de Engenharia tendo as telecomunicações como foco. É uma instituição de ensino privada sem fins lucrativos, mantida pela Fundação Instituto Nacional de Telecomunicações (Finatel)." 
+    },
+    {
+      tipo: "Apoiador",
       nome: "xGMobile",
       imagem: "/xGMobile%20_%20H.png",
       descricao:
@@ -1639,6 +1645,13 @@ function AbaParceiros() {
       imagem: "/Inatelinas.png",
       descricao:
         "O INATELINAS é um grupo formado por ex-alunas do Inatel - Instituto Nacional de Telecomunicações. Nosso grupo é bem diverso, temos mulheres em diversas áreas tanto em empresas como fora delas! Formamos uma rede de apoio para as mulheres que estão formando, para aquelas em transição de carreira e as que buscam desenvolver competências. Através de mentorias gratuitas e eventos temáticos nos tornamos mais ativas na nossa comunidade buscando sempre a inclusão e a diversidade."
+    },
+    {
+      tipo: "Instituição Pública",
+      nome: "Prefeitura de Santa Rita do Sapucaí",
+      imagem: "/PrefeituraSRS.png",
+      descricao:
+        "A Prefeitura de Santa Rita do Sapucaí atua na promoção de serviços e iniciativas voltados ao bem-estar e à proteção da população do município."
     }
   ]
 
