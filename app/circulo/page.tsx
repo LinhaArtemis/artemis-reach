@@ -562,16 +562,6 @@ export default function Circulo() {
 
       {/* Botões fixos */}
       <div style={{ position: "fixed", bottom: "80px", left: 0, right: 0, padding: "0 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
-        <button onClick={() => setModalContatos(true)} style={{
-          width: "100%", padding: "14px",
-          backgroundColor: cores.amarelo, color: cores.roxoEscuro,
-          border: "none", borderRadius: "14px",
-          fontSize: "14px", fontWeight: "700", cursor: "pointer",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-          boxShadow: "0 4px 16px rgba(253,234,114,0.4)"
-        }}>
-          <Users size={18} /> Chamar contatos para um grupo
-        </button>
         <div style={{ display: "flex", gap: "10px" }}>
           <button onClick={() => setModalNovoGrupo(true)} style={{
             flex: 1, padding: "14px",
