@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { auth } from "../firebase"
+import { auth, db } from "../firebase"
 import { verifyPasswordResetCode, confirmPasswordReset } from "firebase/auth"
 import { Shield, CheckCircle2, Eye, EyeOff } from "lucide-react"
 
@@ -85,7 +85,7 @@ function RedefinirSenhaInner() {
           }}>
             <Shield size={24} color={cores.roxo} />
           </div>
-          <p style={{ color: cores.lavanda || "#888" }}>Verificando link...</p>
+          <p style={{ color: cores.roxoClaro || "#888" }}>Verificando link...</p>
         </>}
 
         {estado === "invalido" && <>
