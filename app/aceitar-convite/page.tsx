@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { auth, db } from "../firebase"
 import { onAuthStateChanged } from "firebase/auth"
-import { collection, query, where, getDocs, addDoc, updateDoc, doc, getDoc } from "firebase/firestore"
+import { collection, query, where, getDocs, addDoc, updateDoc, doc, getDoc, arrayUnion } from "firebase/firestore"
 import { Shield, Check } from "lucide-react"
 
 import { useTema } from "../contexts/ThemeContext"
@@ -46,39 +46,48 @@ function AceitarConviteInner() {
   }, [token, usuario])
 
   async function aceitar() {
-  if (!convite || !usuario) return
+    if (!convite || !usuario) return
 
-  // Verifica se permite convites
-  const perfilSnap = await getDoc(doc(db, "usuarios", usuario.uid))
-  const permiteConvites = perfilSnap.data()?.privacidade?.convites !== false
-  if (!permiteConvites) {
-    alert("Você desativou convites para círculo nas configurações de privacidade.")
-    return
-  }
+    // Verifica se permite convites
+    const perfilSnap = await getDoc(doc(db, "usuarios", usuario.uid))
+    const permiteConvites = perfilSnap.data()?.privacidade?.convites !== false
+    if (!permiteConvites) {
+      alert("Você desativou convites para círculo nas configurações de privacidade.")
+      return
+    }
 
-  // Se for convite de GRUPO, entra no grupo
-  if (convite.tipo === "grupo" && convite.grupo_id) {
-    const { arrayUnion } = await import("firebase/firestore")
-    await updateDoc(doc(db, "grupos", convite.grupo_id), {
-      membros: arrayUnion(usuario.uid)
-    })
+    // Se for convite de GRUPO, entra no grupo
+    if (convite.tipo === "grupo" && convite.grupo_id) {
+      await updateDoc(doc(db, "grupos", convite.grupo_id), {
+        membros: arrayUnion(usuario.uid)
+      })
+      await updateDoc(doc(db, "convites", convite.id), { status: "aceito" })
+      setEstado("aceito")
+      setTimeout(() => router.push("/circulo"), 2000)
+      return
+    }
+
+    // Se for convite INDIVIDUAL, cria círculo -- mas só se ainda não existir conexão confirmada
+    const q = query(
+      collection(db, "circulos"),
+      where("usuarios", "array-contains", usuario.uid),
+      where("status", "==", "confirmado")
+    )
+    const snap = await getDocs(q)
+    const jaExiste = snap.docs.some(d => (d.data() as any).usuarios.includes(convite.criador_id))
+
+    if (!jaExiste) {
+      await addDoc(collection(db, "circulos"), {
+        usuarios: [convite.criador_id, usuario.uid],
+        status: "confirmado",
+        compartilha: { [convite.criador_id]: false, [usuario.uid]: false },
+        criado_em: new Date().toISOString()
+      })
+    }
     await updateDoc(doc(db, "convites", convite.id), { status: "aceito" })
     setEstado("aceito")
     setTimeout(() => router.push("/circulo"), 2000)
-    return
   }
-
-  // Se for convite INDIVIDUAL, cria círculo
-  await addDoc(collection(db, "circulos"), {
-    usuarios: [convite.criador_id, usuario.uid],
-    status: "confirmado",
-    compartilha: { [convite.criador_id]: false, [usuario.uid]: false },
-    criado_em: new Date().toISOString()
-  })
-  await updateDoc(doc(db, "convites", convite.id), { status: "aceito" })
-  setEstado("aceito")
-  setTimeout(() => router.push("/circulo"), 2000)
-}
 
   async function recusar() {
     await updateDoc(doc(db, "convites", convite.id), { status: "recusado" })
@@ -129,15 +138,29 @@ function AceitarConviteInner() {
           }}>
             <Check size={24} color="#16a34a" />
           </div>
-          <h2 style={{ color: cores.roxoEscuro }}>Conexão confirmada!</h2>
+          <h2 style={{ color: cores.roxoEscuro }}>
+            {convite?.tipo === "grupo" ? "Você entrou no grupo!" : "Contato adicionado!"}
+          </h2>
           <p style={{ color: cores.lavanda }}>Redirecionando para o seu círculo...</p>
         </>}
 
         {estado === "valido" && convite && <>
-          <h2 style={{ color: cores.roxoEscuro, marginBottom: "8px" }}>Convite do círculo</h2>
-          <p style={{ color: cores.lavanda, marginBottom: "24px" }}>
-            <strong style={{ color: cores.roxoEscuro }}>{convite.criador_nome}</strong> te convidou para o círculo de segurança no Artemis.
-          </p>
+          {convite.tipo === "grupo" ? (
+            <>
+              <h2 style={{ color: cores.roxoEscuro, marginBottom: "8px" }}>Convite de grupo</h2>
+              <p style={{ color: cores.lavanda, marginBottom: "24px" }}>
+                <strong style={{ color: cores.roxoEscuro }}>{convite.criador_nome}</strong> te convidou para o grupo{" "}
+                <strong style={{ color: cores.roxoEscuro }}>{convite.grupo_nome}</strong> no Artemis.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 style={{ color: cores.roxoEscuro, marginBottom: "8px" }}>Convite de contato</h2>
+              <p style={{ color: cores.lavanda, marginBottom: "24px" }}>
+                <strong style={{ color: cores.roxoEscuro }}>{convite.criador_nome}</strong> quer te adicionar como contato de confiança no Artemis.
+              </p>
+            </>
+          )}
           <div style={{ display: "flex", gap: "8px" }}>
             <button onClick={recusar} style={{
               flex: 1, padding: "12px", borderRadius: "12px",
