@@ -32,13 +32,25 @@ function AceitarConviteInner() {
   useEffect(() => {
     if (!token || !usuario) return
     async function buscarConvite() {
-      const q = query(collection(db, "convites"), where("token", "==", token), where("status", "==", "pendente"))
+      // CORRIGIDO: não filtramos mais por status "pendente" aqui.
+      // O link é feito para ser usado por várias pessoas diferentes,
+      // então a validade dele depende só do token existir e não ter expirado —
+      // não do status (que antes era trocado para "aceito" e travava o link
+      // depois do primeiro uso).
+      const q = query(collection(db, "convites"), where("token", "==", token))
       const snap = await getDocs(q)
       if (snap.empty) { setEstado("invalido"); return }
       const data = snap.docs[0]
       const conviteData = { id: data.id, ...data.data() } as any
+
+      if (conviteData.status === "cancelado") { setEstado("invalido"); return }
       if (new Date(conviteData.expira_em) < new Date()) { setEstado("expirado"); return }
       if (conviteData.criador_id === usuario.uid) { setEstado("proprio"); return }
+
+      // Se essa pessoa já aceitou esse mesmo convite antes, não precisa aceitar de novo
+      const jaAceitouAntes = (conviteData.aceito_por || []).includes(usuario.uid)
+      if (jaAceitouAntes) { setEstado("aceito"); return }
+
       setConvite(conviteData)
       setEstado("valido")
     }
@@ -61,7 +73,12 @@ function AceitarConviteInner() {
       await updateDoc(doc(db, "grupos", convite.grupo_id), {
         membros: arrayUnion(usuario.uid)
       })
-      await updateDoc(doc(db, "convites", convite.id), { status: "aceito" })
+      // CORRIGIDO: em vez de status "aceito" (que invalidava o link pra sempre),
+      // guardamos quem já aceitou. O convite continua "pendente" e disponível
+      // para outras pessoas até a data de expiração.
+      await updateDoc(doc(db, "convites", convite.id), {
+        aceito_por: arrayUnion(usuario.uid)
+      })
       setEstado("aceito")
       setTimeout(() => router.push("/circulo"), 2000)
       return
@@ -84,13 +101,18 @@ function AceitarConviteInner() {
         criado_em: new Date().toISOString()
       })
     }
-    await updateDoc(doc(db, "convites", convite.id), { status: "aceito" })
+    // CORRIGIDO: mesma lógica acima — não travamos o link pra outras pessoas.
+    await updateDoc(doc(db, "convites", convite.id), {
+      aceito_por: arrayUnion(usuario.uid)
+    })
     setEstado("aceito")
     setTimeout(() => router.push("/circulo"), 2000)
   }
 
   async function recusar() {
-    await updateDoc(doc(db, "convites", convite.id), { status: "recusado" })
+    // CORRIGIDO: não alteramos mais o status global do convite.
+    // Como o mesmo link pode ser usado por outras pessoas, uma recusa
+    // individual não deve invalidar o link para todo mundo.
     router.push("/inicio")
   }
 
@@ -117,7 +139,7 @@ function AceitarConviteInner() {
 
         {estado === "invalido" && <>
           <h2 style={{ color: cores.roxoEscuro }}>Link inválido</h2>
-          <p style={{ color: cores.lavanda }}>Este convite não existe ou já foi usado.</p>
+          <p style={{ color: cores.lavanda }}>Este convite não existe ou foi cancelado.</p>
         </>}
 
         {estado === "expirado" && <>
