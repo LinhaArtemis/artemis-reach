@@ -1,8 +1,8 @@
 "use client"
 
 import { Suspense, useEffect, useState } from "react"
+import { auth } from "./firebase"
 import { useSearchParams, useRouter } from "next/navigation"
-import { auth, db } from "../firebase"
 import { verifyPasswordResetCode, confirmPasswordReset } from "firebase/auth"
 import { Shield, CheckCircle2, Eye, EyeOff } from "lucide-react"
 
@@ -21,7 +21,7 @@ function RedefinirSenhaInner() {
 
   const [estado, setEstado] = useState("carregando") // carregando | invalido | expirado | formulario | sucesso
   const [email, setEmail] = useState("")
-  const [novaSenha, setNovaSenha] = useState("")
+  const [novaSenha,   setNovaSenha] = useState("")
   const [confirmarSenha, setConfirmarSenha] = useState("")
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [erro, setErro] = useState("")
@@ -85,7 +85,7 @@ function RedefinirSenhaInner() {
           }}>
             <Shield size={24} color={cores.roxo} />
           </div>
-          <p style={{ color: cores.roxoClaro || "#888" }}>Verificando link...</p>
+          <p style={{ color: cores.roxo || "#888" }}>Verificando link...</p>
         </>}
 
         {estado === "invalido" && <>
