@@ -5,7 +5,7 @@ import { auth, db } from "./firebase"
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { useRouter } from "next/navigation"
-import { Shield, Smartphone, Bluetooth } from "lucide-react"
+import { Shield, Smartphone, Bluetooth, Mail, ArrowLeft, CheckCircle2 } from "lucide-react"
 import { useTema } from "./contexts/ThemeContext"
 
 const cores = {
@@ -95,6 +95,12 @@ export default function Home() {
   const [carregando, setCarregando] = useState(false)
   const router = useRouter()
 
+  // ─── Estado da recuperação de senha ───
+  const [emailRecuperacao, setEmailRecuperacao] = useState("")
+  const [erroRecuperacao, setErroRecuperacao] = useState("")
+  const [enviandoRecuperacao, setEnviandoRecuperacao] = useState(false)
+  const [reenviarEm, setReenviarEm] = useState(0)
+
   // Verifica se já está logado
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -105,6 +111,13 @@ export default function Home() {
     })
     return () => unsub()
   }, [])
+
+  // Contador do "reenviar email"
+  useEffect(() => {
+    if (reenviarEm <= 0) return
+    const t = setTimeout(() => setReenviarEm(reenviarEm - 1), 1000)
+    return () => clearTimeout(t)
+  }, [reenviarEm])
 
   async function entrar() {
     setErro("")
@@ -143,6 +156,42 @@ export default function Home() {
     } else {
       router.push("/inicio")
     }
+  }
+
+  // ─── Envia o email de recuperação de senha ───
+  async function enviarRecuperacao() {
+    setErroRecuperacao("")
+
+    if (!emailRecuperacao.trim()) {
+      setErroRecuperacao("Digite seu email.")
+      return
+    }
+
+    setEnviandoRecuperacao(true)
+    try {
+      await sendPasswordResetEmail(auth, emailRecuperacao.trim())
+      setTela("email-enviado")
+      setReenviarEm(30)
+    } catch (e: any) {
+      if (e.code === "auth/user-not-found") {
+        setErroRecuperacao("Email inválido.")
+      } else if (e.code === "auth/invalid-email") {
+        setErroRecuperacao("Email inválido.")
+      } else {
+        setErroRecuperacao("Erro ao enviar recuperação. Tente novamente.")
+      }
+    }
+    setEnviandoRecuperacao(false)
+  }
+
+  async function reenviarRecuperacao() {
+    if (reenviarEm > 0) return
+    setEnviandoRecuperacao(true)
+    try {
+      await sendPasswordResetEmail(auth, emailRecuperacao.trim())
+    } catch { }
+    setReenviarEm(30)
+    setEnviandoRecuperacao(false)
   }
 
   if (splash) return <Splash onFim={() => setSplash(false)} />
@@ -231,28 +280,112 @@ export default function Home() {
     </div>
   )
 
+  // ─── TELA: ESQUECI MINHA SENHA (pede o email) ───
+  if (tela === "esqueci-senha") return (
+    <div style={{
+      minHeight: "100vh", backgroundColor: cores.fundo,
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+      padding: "32px 24px", fontFamily: "sans-serif"
+    }}>
+      <div style={{ backgroundColor: cores.branco, borderRadius: "20px", padding: "32px", width: "100%", maxWidth: "440px", boxShadow: "0 4px 24px rgba(90,73,151,0.12)" }}>
+
+        <button
+          onClick={() => { setTela("login"); setErroRecuperacao(""); setEmailRecuperacao("") }}
+          style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", color: cores.roxo, fontSize: "13px", fontWeight: "600", padding: 0, marginBottom: "20px" }}
+        >
+          <ArrowLeft size={16} /> Voltar para o login
+        </button>
+
+        <div style={{
+          width: "56px", height: "56px", borderRadius: "50%",
+          backgroundColor: `rgba(90,73,151,0.1)`, display: "flex",
+          alignItems: "center", justifyContent: "center", marginBottom: "20px"
+        }}>
+          <Mail size={24} color={cores.roxo} />
+        </div>
+
+        <h2 style={{ color: cores.roxoEscuro, margin: "0 0 8px", fontSize: "20px" }}>Esqueceu sua senha?</h2>
+        <p style={{ color: "#888", fontSize: "13px", lineHeight: "1.6", margin: "0 0 24px" }}>
+          Sem problemas. Digite o email da sua conta e enviaremos um link para você criar uma nova senha.
+        </p>
+
+        <Campo label="Email" placeholder="seu@email.com" value={emailRecuperacao} onChange={setEmailRecuperacao} tipo="email" />
+
+        {erroRecuperacao && <p style={{ color: "#ef4444", fontSize: "13px", marginBottom: "16px", textAlign: "center" }}>{erroRecuperacao}</p>}
+
+        <button
+          onClick={enviarRecuperacao}
+          disabled={enviandoRecuperacao}
+          style={{
+            width: "100%", padding: "14px", backgroundColor: cores.roxo,
+            color: cores.branco, border: "none", borderRadius: "12px",
+            fontSize: "15px", fontWeight: "bold", cursor: "pointer",
+            opacity: enviandoRecuperacao ? 0.7 : 1
+          }}
+        >
+          {enviandoRecuperacao ? "Enviando..." : "Enviar link de recuperação"}
+        </button>
+      </div>
+    </div>
+  )
+
+  // ─── TELA: EMAIL ENVIADO (confirmação) ───
+  if (tela === "email-enviado") return (
+    <div style={{
+      minHeight: "100vh", backgroundColor: cores.fundo,
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+      padding: "32px 24px", fontFamily: "sans-serif"
+    }}>
+      <div style={{ backgroundColor: cores.branco, borderRadius: "20px", padding: "32px", width: "100%", maxWidth: "440px", boxShadow: "0 4px 24px rgba(90,73,151,0.12)", textAlign: "center" }}>
+
+        <div style={{
+          width: "64px", height: "64px", borderRadius: "50%",
+          backgroundColor: "rgba(34,197,94,0.1)", display: "flex",
+          alignItems: "center", justifyContent: "center", margin: "0 auto 20px"
+        }}>
+          <CheckCircle2 size={28} color="#16a34a" />
+        </div>
+
+        <h2 style={{ color: cores.roxoEscuro, margin: "0 0 8px", fontSize: "20px" }}>Verifique seu email</h2>
+        <p style={{ color: "#888", fontSize: "13px", lineHeight: "1.6", margin: "0 0 4px" }}>
+          Enviamos um link de recuperação para
+        </p>
+        <p style={{ color: cores.roxoEscuro, fontSize: "14px", fontWeight: "700", margin: "0 0 20px" }}>
+          {emailRecuperacao}
+        </p>
+        <p style={{ color: "#aaa", fontSize: "12px", lineHeight: "1.6", margin: "0 0 28px" }}>
+          Clique no link que enviamos para criar uma nova senha. Não esqueça de checar a caixa de spam/lixo eletrônico.
+        </p>
+
+        <button
+          onClick={() => { setTela("login"); setErroRecuperacao(""); setEmailRecuperacao("") }}
+          style={{
+            width: "100%", padding: "14px", backgroundColor: cores.roxo,
+            color: cores.branco, border: "none", borderRadius: "12px",
+            fontSize: "15px", fontWeight: "bold", cursor: "pointer",
+            marginBottom: "16px"
+          }}
+        >
+          Voltar para o login
+        </button>
+
+        <p style={{ fontSize: "13px", color: "#888", margin: 0 }}>
+          Não recebeu o email?{" "}
+          {reenviarEm > 0 ? (
+            <span style={{ color: "#bbb" }}>Reenviar em {reenviarEm}s</span>
+          ) : (
+            <span onClick={reenviarRecuperacao} style={{ color: cores.roxo, fontWeight: "bold", cursor: "pointer" }}>
+              Reenviar email
+            </span>
+          )}
+        </p>
+      </div>
+    </div>
+  )
+
   // ─── TELA DE LOGIN / CADASTRO ───
-
-  async function recuperarSenha() {
-    if (!email) {
-      setErro("Digite seu email primeiro para recuperar a senha.")
-      return
-    }
-    try {
-      await sendPasswordResetEmail(auth, email)
-      setErro("")
-      alert("Enviamos um link de recuperação para o seu email!")
-    } catch (e: any) {
-      if (e.code === "auth/user-not-found") {
-        setErro("Não encontramos uma conta com esse email.")
-      } else if (e.code === "auth/invalid-email") {
-        setErro("Email inválido.")
-      } else {
-        setErro("Erro ao enviar recuperação. Tente novamente.")
-      }
-    }
-  }
-
   return (
     <div style={{
       minHeight: "100vh", backgroundColor: cores.fundo,
@@ -283,7 +416,13 @@ export default function Home() {
             <label style={{ fontSize: "13px", color: "#666", display: "flex", alignItems: "center", gap: "6px" }}>
               <input type="checkbox" /> Lembrar-me
             </label>
-            <span onClick={recuperarSenha} style={{ fontSize: "13px", color: cores.roxo, cursor: "pointer", fontWeight: "600" }}>Esqueceu a senha?</span>          </div>
+            <span
+              onClick={() => { setEmailRecuperacao(email); setErroRecuperacao(""); setTela("esqueci-senha") }}
+              style={{ fontSize: "13px", color: cores.roxo, cursor: "pointer", fontWeight: "600" }}
+            >
+              Esqueceu a senha?
+            </span>
+          </div>
         )}
 
         {erro && <p style={{ color: "#ef4444", fontSize: "13px", marginBottom: "16px", textAlign: "center" }}>{erro}</p>}
