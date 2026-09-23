@@ -73,6 +73,37 @@ function AbaChat({ usuario, nomeUsuario }: any) {
   const [nomesMembros, setNomesMembros] = useState<any>({})
   const bottomRef = useRef<any>(null)
 
+  // CORREÇÃO: a altura do chat era um valor fixo "chutado"
+  // (calc(100dvh - 180px)), o que deixava um espaço vazio antes da
+  // navegação inferior em telas onde esse chute não batia certo. Agora a
+  // altura é medida de verdade no navegador (posição onde o chat começa +
+  // altura real da barra de navegação) e recalculada em resize/rotação.
+  const containerChatRef = useRef<HTMLDivElement>(null)
+  const [alturaChat, setAlturaChat] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!chatAtivo) return
+
+    function calcularAltura() {
+      const container = containerChatRef.current
+      if (!container) return
+      const nav = document.getElementById("nav-inferior")
+      const topo = container.getBoundingClientRect().top
+      const alturaNav = nav ? nav.getBoundingClientRect().height : 0
+      const novaAltura = window.innerHeight - topo - alturaNav
+      setAlturaChat(novaAltura)
+    }
+
+    calcularAltura()
+    window.addEventListener("resize", calcularAltura)
+    window.addEventListener("orientationchange", calcularAltura)
+
+    return () => {
+      window.removeEventListener("resize", calcularAltura)
+      window.removeEventListener("orientationchange", calcularAltura)
+    }
+  }, [chatAtivo])
+
   // Busca grupos
   useEffect(() => {
     if (!usuario) return
@@ -466,11 +497,14 @@ function AbaChat({ usuario, nomeUsuario }: any) {
 
   // ─── CONVERSA ABERTA ───
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      height: "calc(100dvh - 180px)"
-    }}>
+    <div
+      ref={containerChatRef}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: alturaChat !== null ? `${alturaChat}px` : "calc(100dvh - 180px)"
+      }}
+    >
 
       {/* Header do chat */}
       <div style={{
@@ -1921,21 +1955,24 @@ export default function Comunidade() {
       </div>
 
       {/* Navegação inferior */}
-      <div style={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: cores.branco,
-        borderTop:
-          `1px solid ${cores.fundo}`,
-        display: "flex",
-        justifyContent: "space-around",
-        padding: "10px 0",
-        boxShadow:
-          "0 -2px 12px rgba(90,73,151,0.08)",
-        zIndex: 100
-      }}>
+      <div
+        id="nav-inferior"
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: cores.branco,
+          borderTop:
+            `1px solid ${cores.fundo}`,
+          display: "flex",
+          justifyContent: "space-around",
+          padding: "10px 0",
+          boxShadow:
+            "0 -2px 12px rgba(90,73,151,0.08)",
+          zIndex: 100
+        }}
+      >
         {nav.map((item) => {
           const ativo =
             pathname === item.href
