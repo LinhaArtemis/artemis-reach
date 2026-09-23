@@ -469,7 +469,7 @@ function AbaChat({ usuario, nomeUsuario }: any) {
     <div style={{
       display: "flex",
       flexDirection: "column",
-      height: "calc(100vh - 180px)"
+      height: "calc(100dvh - 180px)"
     }}>
 
       {/* Header do chat */}
@@ -637,11 +637,15 @@ function AbaChat({ usuario, nomeUsuario }: any) {
       {/* Input */}
       <div style={{
         padding: "12px 16px",
+        paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))",
         backgroundColor: cores.branco,
         borderTop: `1px solid ${cores.fundo}`,
         display: "flex",
         alignItems: "center",
-        gap: "8px"
+        gap: "8px",
+        position: "sticky",
+        bottom: 0,
+        zIndex: 150
       }}>
         <input
           placeholder="Digite uma mensagem..."
@@ -1307,7 +1311,9 @@ function AbaComunidade({ usuario, nomeUsuario }: any) {
                       border:
                         "1.5px solid #E8E0F5",
                       outline: "none",
-                      fontSize: "13px"
+                      fontSize: "13px",
+                      color: cores.texto,
+                      backgroundColor: cores.fundo
                     }}
                   />
 
