@@ -1692,6 +1692,30 @@ function AbaParceiros() {
       imagem: "/PrefeituraSRS.png",
       descricao:
         "A Prefeitura de Santa Rita do Sapucaí atua na promoção de serviços e iniciativas voltados ao bem-estar e à proteção da população do município."
+    },
+    {
+      tipo: "Patrocinador Demonstrativo",
+      nome: "Academia Athena",
+      imagem: "/athena.png",
+      descricao: "Academia com espaço exclusivo feminino e turmas de defesa pessoal. Une saúde, bem-estar e segurança, incentivando mulheres a se sentirem fortes dentro e fora do treino." 
+    },
+    {
+      tipo: "Patrocinador Demonstrativo",
+      nome: "RosaMob",
+      imagem: "/rosamob.png",
+      descricao: "Aplicativo de transporte com motoristas mulheres para passageiras mulheres. Prioriza a segurança e o conforto no deslocamento urbano, especialmente em horários noturnos." 
+    },
+    {
+      tipo: "Patrocinador Demonstrativo",
+      nome: "Florescer Cosméticos",
+      imagem: "/florescer.png",
+      descricao: "Marca de cosméticos naturais que destina parte de sua receita a projetos de proteção e empoderamento feminino. Acredita que autoestima e segurança caminham juntas." 
+    },
+    {
+      tipo: "Patrocinador Demonstrativo",
+      nome: "Valente Moda",
+      imagem: "/valentemoda.png",
+      descricao: " Marca de moda feminina que celebra a força e a autonomia das mulheres. Apoia iniciativas de combate à violência de gênero." 
     }
   ]
 
