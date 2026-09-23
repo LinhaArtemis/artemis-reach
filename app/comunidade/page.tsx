@@ -498,11 +498,10 @@ function AbaChat({ usuario, nomeUsuario }: any) {
   // ─── CONVERSA ABERTA ───
   return (
     <div
-      ref={containerChatRef}
       style={{
         display: "flex",
         flexDirection: "column",
-        height: alturaChat !== null ? `${alturaChat}px` : "calc(100dvh - 180px)"
+        height: "calc(100dvh - 130px)"
       }}
     >
 
@@ -578,6 +577,7 @@ function AbaChat({ usuario, nomeUsuario }: any) {
         flex: 1,
         overflowY: "auto",
         padding: "16px",
+        paddingBottom: "80px",
         display: "flex",
         flexDirection: "column",
         gap: "8px"
@@ -671,14 +671,15 @@ function AbaChat({ usuario, nomeUsuario }: any) {
       {/* Input */}
       <div style={{
         padding: "12px 16px",
-        paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))",
         backgroundColor: cores.branco,
         borderTop: `1px solid ${cores.fundo}`,
         display: "flex",
         alignItems: "center",
         gap: "8px",
-        position: "sticky",
-        bottom: 0,
+        position: "fixed",
+        bottom: "62px",
+        left: 0,
+        right: 0,
         zIndex: 150
       }}>
         <input
